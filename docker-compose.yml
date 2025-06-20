@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  test-db:
+    container_name: test_database
+    image: postgres:16.2
+    restart: always
+    ports:
+      - 5436:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=testdb
+
+
+  springboot-app:
+      container_name: springboot-app
+      image: springboot-app:1.0.0
+      build:
+        context: .
+      ports:
+      - "8083:8080"
+      depends_on:
+        - test-db
+      environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://test-db:5432/testdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      
+  

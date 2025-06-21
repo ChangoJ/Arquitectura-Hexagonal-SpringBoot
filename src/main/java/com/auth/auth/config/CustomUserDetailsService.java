@@ -1,7 +1,9 @@
 package com.auth.auth.config;
 
 import java.util.Collections;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,16 +16,18 @@ import com.auth.auth.domain.model.User;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepositoryPort userRepositoryPort;
+     private UserRepositoryPort userRepositoryPort;
 
-    public CustomUserDetailsService(UserRepositoryPort userRepositoryPort) {
+    @Autowired
+    public void setUserRepository(UserRepositoryPort userRepositoryPort) {
         this.userRepositoryPort = userRepositoryPort;
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepositoryPort.findUserByEmail(email);
-                
+        Optional<User> userOptional = userRepositoryPort.findUserByEmail(email);
+
+        User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.email())

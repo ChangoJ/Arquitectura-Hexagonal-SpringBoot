@@ -50,6 +50,7 @@ public class SecurityConfiguration {
             "/swagger-ui.html",
             // Otros endpoints públicos
             "/users/register",
+            "/users/login",
             "/h2-console/**",
             "/actuator/**"
     };
@@ -91,14 +92,37 @@ public class SecurityConfiguration {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Permitir orígenes específicos (ajusta según tus necesidades)
-        configuration.setAllowedOrigins(Arrays.asList("/*"));// indicar origenes que se acepten
+         configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",    // React
+            "http://localhost:4200",    // Angular
+            "http://localhost:8080",    // Mismo servidor (Swagger)
+            "http://localhost:8083",    // Mismo servidor (Swagger)
+            "http://127.0.0.1:8080",    // Alternativa localhost
+             "http://127.0.0.1:8083" 
+        ));
         // Permitir métodos HTTP específicos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
         // Permitir encabezados específicos
-        configuration.setAllowedHeaders(Arrays.asList("Origin, Accept", "X-Requested-With",
-                "Access-Control-Allow-Origin", "Authorization", "Cache-Control", "Content-Type"));
+         configuration.setAllowedHeaders(Arrays.asList(
+            "Origin",
+            "Accept", 
+            "X-Requested-With",
+            "Access-Control-Allow-Origin",
+            "Authorization",
+            "Cache-Control",
+            "Content-Type",
+            "Access-Control-Allow-Headers",
+            "Access-Control-Allow-Methods"
+        ));;
         // Permitir credenciales (si es necesario, por ejemplo, para cookies o
         // autenticación)
+
+          //Headers expuestos al cliente
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization",
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Credentials"
+        ));
         configuration.setAllowCredentials(true);
         // Establecer tiempo de caché para preflight requests (en segundos)
         configuration.setMaxAge(3600L);

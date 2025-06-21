@@ -13,19 +13,17 @@ import com.auth.auth.common.exceptions.ResourceNotFoundException;
 public class JpaUserRepositoryAdapter implements UserRepositoryPort {
 
     private final SprintDataJpaUserRepository sprintDataJpaUserRepository;
-    // private final PasswordEncoder passwordEncoder;
 
     public JpaUserRepositoryAdapter(SprintDataJpaUserRepository sprintDataJpaUserRepository) {
         this.sprintDataJpaUserRepository = sprintDataJpaUserRepository;
-        // this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public User saveUser(User user) {
+        String normalizedEmail = user.email().toLowerCase();
+      
 
-        UserEntity userEntity = new UserEntity(user.id(), user.username(), user.email(), user.password());
-
-        this.findUserByEmail(user.email());
+        UserEntity userEntity = new UserEntity(user.id(), user.username(), normalizedEmail, user.password());
 
         final UserEntity saveUserEntity = this.sprintDataJpaUserRepository.save(userEntity);
 
@@ -35,16 +33,11 @@ public class JpaUserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
-    public User findUserByEmail(String email) {
+    public Optional<User> findUserByEmail(String email) {
+        String normalizedEmail = email.toLowerCase();
+        Optional<UserEntity> userEntity = this.sprintDataJpaUserRepository.findByEmail(normalizedEmail);
 
-        final UserEntity userFound = this.sprintDataJpaUserRepository.findByEmail(email);
-
-        if (userFound == null) {
-            throw new ResourceNotFoundException("Usuario no encontrado");
-        }
-
-        return new User(userFound.getId(), userFound.getUsername(), userFound.getEmail(), userFound.getPassword());
-
+        return userEntity.map(entity -> new User(entity.getId(), entity.getUsername(), entity.getEmail(), entity.getPassword()));
     }
 
 }

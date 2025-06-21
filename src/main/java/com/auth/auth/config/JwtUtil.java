@@ -63,17 +63,23 @@ public class JwtUtil {
                 .getSubject();
     }
     
-     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername())) && !validateAccessToken(token);
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        try {
+            final String username = getUsernameFromToken(token);
+            return (username != null && username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        } catch (Exception e) {
+            System.out.println("Error validating token: " + e.getMessage());
+            return false;
+        }
     }
 
-    public boolean validateAccessToken(String token) {
+    // Método separado para verificar si el token está expirado
+    private boolean isTokenExpired(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token);
-            return true;
-        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException e) {
-            return false;
+            Date expiration = extractAllClaims(token).getExpiration();
+            return expiration.before(new Date());
+        } catch (Exception e) {
+            return true; // Si hay error, consideramos el token como expirado
         }
     }
 

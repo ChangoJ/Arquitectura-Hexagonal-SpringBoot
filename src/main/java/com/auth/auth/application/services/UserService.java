@@ -1,46 +1,44 @@
 package com.auth.auth.application.services;
 
-
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.auth.auth.application.ports.in.AuthUserUseCase;
 import com.auth.auth.application.ports.in.CreateUserUseCase;
 import com.auth.auth.application.ports.in.GetUserUseCase;
 import com.auth.auth.application.ports.out.UserRepositoryPort;
+import com.auth.auth.common.exceptions.ResourceAlreadyExistsException;
+import com.auth.auth.common.exceptions.ResourceNotFoundException;
 import com.auth.auth.domain.model.User;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import jakarta.validation.Valid;
-
-
 @Service
-public class UserService implements CreateUserUseCase, AuthUserUseCase, GetUserUseCase{
+public class UserService implements CreateUserUseCase, GetUserUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
+    private final PasswordEncoder passwordEncoder;
 
-
-    public UserService(UserRepositoryPort userRepositoryPort) {
+    public UserService(UserRepositoryPort userRepositoryPort, PasswordEncoder passwordEncoder) {
         this.userRepositoryPort = userRepositoryPort;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public User createUser(User user){
-        return this.userRepositoryPort.saveUser(user);
+    public User createUser(User user) {
+
+        if (userRepositoryPort.findUserByEmail(user.email()).isPresent()) {
+            throw new ResourceAlreadyExistsException("User with email " + user.email() + " already exists.");
+        }
+
+        String encodedPassword = passwordEncoder.encode(user.password());
+        User userToSave = new User(user.id(), user.username(), user.email(), encodedPassword);
+        return userRepositoryPort.saveUser(userToSave);
     }
 
     @Override
-    public User loginUser(String email){
-
-        return this.userRepositoryPort.findUserByEmail(email);
+    public Optional<User> getUser(String email) {
+        Optional<User> user = this.userRepositoryPort.findUserByEmail(email);
+        return user;
     }
-
-    @Override
-    public User getUser(String email){
-        return this.userRepositoryPort.findUserByEmail(email);
-    }
-
-
 
 }

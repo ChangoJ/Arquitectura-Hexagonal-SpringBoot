@@ -7,18 +7,22 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor  // Indica a Hibernate que esta entidad es inmutable
 @Table(name = "users")
 public final class UserEntity {
     
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private final String id;
-    private final String username;
-    private final String email;
-    private final String password;
+    private  String id;
+    private  String username;
+    private  String email;
+    private  String password;
 }

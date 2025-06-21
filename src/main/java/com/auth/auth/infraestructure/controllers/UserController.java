@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.auth.auth.application.ports.in.CreateUserUseCase;
 import com.auth.auth.application.ports.in.GetUserUseCase;
+import com.auth.auth.common.exceptions.UnauthorizedException;
 import com.auth.auth.config.JwtUtil;
 import com.auth.auth.domain.model.User;
 import com.auth.auth.infraestructure.controllers.dto.LoginRequestDto;
@@ -27,9 +28,11 @@ import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -44,7 +47,8 @@ public class UserController {
     private final UserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
-    public UserController(CreateUserUseCase createUserUseCase, GetUserUseCase getUserUseCase, AuthenticationManager authenticationManager, UserDetailsService userDetailsService, JwtUtil jwtUtil) {
+    public UserController(CreateUserUseCase createUserUseCase, GetUserUseCase getUserUseCase,
+            AuthenticationManager authenticationManager, UserDetailsService userDetailsService, JwtUtil jwtUtil) {
         this.createUserUseCase = createUserUseCase;
         this.getUserUseCase = getUserUseCase;
         this.authenticationManager = authenticationManager;
@@ -61,16 +65,17 @@ public class UserController {
 
         User userCreated = this.createUserUseCase.createUser(user);
 
-        return new UserResponseDto(userCreated.id(), userCreated.email(), userCreated.username());
+        return new UserResponseDto(userCreated.id(), userCreated.username(), userCreated.email());
 
     }
 
     @GetMapping("/{email}")
     public UserResponseDto getUser(@Email @PathVariable String email) {
 
-        User user = this.getUserUseCase.getUser(email);
+        Optional<User> userOptional = this.getUserUseCase.getUser(email);
 
-        return new UserResponseDto(user.id(), user.email(), user.username());
+        User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        return new UserResponseDto(user.id(), user.username(), user.email());
 
     }
 
@@ -83,7 +88,9 @@ public class UserController {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequestDto.email(), loginRequestDto.password()));
         } catch (BadCredentialsException e) {
-            throw new RuntimeException("Invalid credentials", e);
+            throw new UnauthorizedException("Invalid credentials " + e);
+        } catch (InternalAuthenticationServiceException e) {
+            throw new UnauthorizedException("Invalid credentials" + e);
         }
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequestDto.email());
@@ -97,13 +104,14 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "Token refreshed")
     @ApiResponse(responseCode = "401", description = "Invalid refresh token")
     @PostMapping("/refresh-token")
-    public ResponseEntity<TokenResponseDto> refreshToken(@Valid @RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
+    public ResponseEntity<TokenResponseDto> refreshToken(
+            @Valid @RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
         String refreshToken = refreshTokenRequestDto.refreshToken();
         String userEmail = jwtUtil.getUsernameFromToken(refreshToken);
 
         if (userEmail != null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-            
+
             if (jwtUtil.isTokenValid(refreshToken, userDetails)) {
                 String newAccessToken = jwtUtil.generateAccessToken(userDetails);
                 return ResponseEntity.ok(new TokenResponseDto(newAccessToken, refreshToken));
@@ -112,8 +120,5 @@ public class UserController {
 
         throw new RuntimeException("Invalid refresh token");
     }
-
-
-
 
 }

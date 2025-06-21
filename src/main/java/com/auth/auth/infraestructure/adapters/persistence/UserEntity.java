@@ -17,7 +17,7 @@ public final class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private final UUID id;
+    private final String id;
     private final String username;
     private final String email;
     private final String password;

@@ -1,6 +1,6 @@
 package com.auth.auth.infraestructure.controllers.dto;
 
-public record UserLoginResponseDto(
+public record LoginResponseDto(
     String username,
     String email
 ){}

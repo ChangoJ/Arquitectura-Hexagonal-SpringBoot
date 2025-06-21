@@ -1,7 +1,8 @@
 package com.auth.auth.application.ports.in;
 
+
 import com.auth.auth.domain.model.User;
 
-public interface AuthUserUseCase {
-    public User loginUser(String email);
+public interface GetUserUseCase {
+    User getUser(String email);
 }

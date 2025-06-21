@@ -9,7 +9,6 @@ import com.auth.auth.application.ports.in.CreateUserUseCase;
 import com.auth.auth.application.ports.in.GetUserUseCase;
 import com.auth.auth.application.ports.out.UserRepositoryPort;
 import com.auth.auth.common.exceptions.ResourceAlreadyExistsException;
-import com.auth.auth.common.exceptions.ResourceNotFoundException;
 import com.auth.auth.domain.model.User;
 
 @Service

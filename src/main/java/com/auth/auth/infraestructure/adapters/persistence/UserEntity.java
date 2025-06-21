@@ -1,6 +1,5 @@
 package com.auth.auth.infraestructure.adapters.persistence;
 
-import java.util.UUID;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

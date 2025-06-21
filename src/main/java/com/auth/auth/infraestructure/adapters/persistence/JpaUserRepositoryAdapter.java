@@ -7,7 +7,6 @@ import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 import com.auth.auth.application.ports.out.UserRepositoryPort;
-import com.auth.auth.common.exceptions.ResourceNotFoundException;
 
 @Repository
 public class JpaUserRepositoryAdapter implements UserRepositoryPort {
